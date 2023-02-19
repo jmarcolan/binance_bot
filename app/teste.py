@@ -85,9 +85,11 @@ def token_symbol_using_base(client:Spot, symbols, side, amount_token_base, price
 
 
 
-def get_historical_k_line(time_step = "1h", datetime_str = '20/12/22'):
+def get_historical_k_line(pair="EURBUSD", time_step = "1h", datetime_str = '20/12/22'):
     def convert_to_kline(ls):
         di = {
+            "pair": pair,
+            "time_step": time_step,
             "open_time_ms": ls[0],
             "open_price":  ls[1],
             "high_prioce": ls[2],
@@ -107,7 +109,7 @@ def get_historical_k_line(time_step = "1h", datetime_str = '20/12/22'):
     datetime_object = datetime.strptime(datetime_str, '%d/%m/%y')
     time_1 = int(datetime_object.timestamp()*1000)
     spot_client = Spot()
-    k_lines = list(map(convert_to_kline, spot_client.klines("EURBUSD", time_step, limit=1000, startTime = time_1)))
+    k_lines = list(map(convert_to_kline, spot_client.klines(pair, time_step, limit=1000, startTime = time_1)))
     return k_lines, k_lines[0]["open_time_ms"], k_lines[-1]["open_time_ms"]
 
 # {'symbol': 'EURBUSD', 'orderId': 134115308, 'orderListId': -1, 'clientOrderId': 'AUJeEtlqm64jDfkIP187nR', 'transactTime': 1674336191960, 'price': '1.07000000', 'origQty': '10.40000000', 'executedQty': '0.00000000', 'cummulativeQuoteQty': '0.00000000', 'status': 'NEW', 'timeInForce': 'GTC', 'type': 'LIMIT', 'side': 'BUY', 'workingTime': 1674336191960, 'fills': [], 'selfTradePreventionMode': 'NONE'}
@@ -116,6 +118,7 @@ def get_historical_k_line(time_step = "1h", datetime_str = '20/12/22'):
 
 #  response = client.get_order("BTCUSDT", orderId="")
 def test_1():
+
     client = Spot()
     client = Spot(api_key=key_binance['api_key'], api_secret=key_binance['api_secret'])
     # BUY EURO POR USD USANDO O FIRST USANDO EURO

@@ -23,15 +23,20 @@ RUN pip install notebook
 # VOLUME mongo_data/ /data/db/
 
 RUN  mkdir /home/app/
-# RUN  mkdir /data/db
+RUN  mkdir /data
 RUN  cd /home/app/
 WORKDIR /home/app/
 
+COPY --chown=developer:developer ./app/requirements.txt /home/app/requirements.txt
+RUN pip install -r /home/app/requirements.txt
+VOLUME /home/app/data
+
 COPY --chown=developer:developer ./app/ /home/app
+
 # COPY --chown=developer:developer ./gestao_dados/ /home/ethowatcher/gestao_dados
 # COPY --chown=developer:developer ./running_jupyter_mongo.sh /home/ethowatcher/running_jupyter_mongo.sh
 
-RUN pip install -r /home/app/requirements.txt
+# RUN pip install -r /home/app/requirements.txt
 # RUN pip install -e /home/ethowatcher/gestao_dados/gestao-dados/
 # RUN pip install -r /home/ethowatcher/gestao_dados/ethowatcher-server/requirements.txt
 
