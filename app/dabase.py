@@ -6,6 +6,7 @@ from sqlalchemy import Column, String, Integer
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm import Session
+from datetime import datetime
 
 # @dataclass
 # class K_line:
@@ -51,21 +52,21 @@ class K_line_h(Base):
     ignore= Column(String(100), nullable=False)
 
     def __repr__(self):
-        return f'<Kline pair="{self.pair}" time={self.open_time_ms} time={self.time_step} close_p = "{self.close_price}"'
+        return f'<Kline pair="{self.pair}" time= {self.open_time_ms} , {datetime.fromtimestamp(self.open_time_ms/1000)} time_step={self.time_step} close_p = "{self.close_price}"'
 
 
 # Connect to database
 
 
-class Student(Base):
-    __tablename__ = 'students'
+# class Student(Base):
+#     __tablename__ = 'students'
 
-    id = Column(Integer(), auto_increment=True, primary_key=True)
-    name = Column(String(50), nullable=False)
-    age = Column(Integer(), nullable=False)
+#     id = Column(Integer(), auto_increment=True, primary_key=True)
+#     name = Column(String(50), nullable=False)
+#     age = Column(Integer(), nullable=False)
 
-    def __repr__(self):
-        return f'<Student name="{self.name}" age={self.age}>'
+#     def __repr__(self):
+#         return f'<Student name="{self.name}" age={self.age}>'
     
 
 # if __name__ == "__main__":
