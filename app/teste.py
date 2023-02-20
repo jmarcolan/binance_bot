@@ -105,12 +105,18 @@ def get_historical_k_line(pair="EURBUSD", time_step = "1h", datetime_str = '20/1
         }
         return di
     
+    time_1 = datetime_str
+    if type(datetime_str) == str:
+        datetime_object = datetime.strptime(datetime_str, '%d/%m/%y')
+        time_1 = int(datetime_object.timestamp()*1000)
     
-    datetime_object = datetime.strptime(datetime_str, '%d/%m/%y')
-    time_1 = int(datetime_object.timestamp()*1000)
     spot_client = Spot()
     k_lines = list(map(convert_to_kline, spot_client.klines(pair, time_step, limit=1000, startTime = time_1)))
-    return k_lines, k_lines[0]["open_time_ms"], k_lines[-1]["open_time_ms"]
+
+    if type(datetime_str) == str:
+        return k_lines, k_lines[0]["open_time_ms"], k_lines[-1]["open_time_ms"]
+    else:
+        return k_lines[1:], k_lines[1]["open_time_ms"], k_lines[-1]["open_time_ms"]
 
 # {'symbol': 'EURBUSD', 'orderId': 134115308, 'orderListId': -1, 'clientOrderId': 'AUJeEtlqm64jDfkIP187nR', 'transactTime': 1674336191960, 'price': '1.07000000', 'origQty': '10.40000000', 'executedQty': '0.00000000', 'cummulativeQuoteQty': '0.00000000', 'status': 'NEW', 'timeInForce': 'GTC', 'type': 'LIMIT', 'side': 'BUY', 'workingTime': 1674336191960, 'fills': [], 'selfTradePreventionMode': 'NONE'}
 
@@ -146,11 +152,17 @@ def test_2():
 def test_3():
     k_lines, first_k_line, last_k_line = get_historical_k_line("5m")
     print(first_k_line, last_k_line )
-    
+
+def test_4():
+    k_lines, first_k_line, last_k_line = get_historical_k_line("EURBUSD", "5m", 1671794100000) # if put some timestamp get all less the passing.
+    print(first_k_line, last_k_line )
+
 if __name__ == "__main__":
     # test_1()
     # test_2()
-    test_3()
+    # test_3()
+    test_4()
+    
     
     
 

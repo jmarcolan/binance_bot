@@ -79,9 +79,24 @@ def get_data_until_now(pair, time_step, db_str="sqlite:////home/app/data/demo1.d
 
         if r_need_more_requisition:
             save_to_db(pair, time_step, last.open_time_ms, db_str)
+        
+        time.sleep(10)
 
 
+def get_list_kandle(pair, time_step, db_str="sqlite:////home/app/data/demo1.db") -> Tuple[db_c.K_line_h, db_c.K_line_h]:
+    stmt = select(db_c.K_line_h
+                  ).where(db_c.K_line_h.pair.in_([pair])
+                          ).where(db_c.K_line_h.time_step.in_([time_step]))
+    
 
+    # stmt.order_by("open_time_ms desc")
+    # pass
+    engine = sqlalchemy.create_engine(db_str)
+    db_c.Base.metadata.create_all(engine)
+    session = Session(engine)
+    
+    k_lines = list(session.scalars(stmt))
+    
 
 
 
@@ -156,10 +171,20 @@ def test_2():
 def test_3():
     pair = "EURBUSD"
     time_step = "5m"
-    get_data_until_now(pair, time_step)
+    db_str = "sqlite:////home/app/data/price_data_binance.db"
+    get_data_until_now(pair, time_step, db_str)
+
+def test_4():
+
+    pair = "EURBUSD"
+    time_step = "5m"
+    db_str = "sqlite:////home/app/data/price_data_binance.db"
+    save_to_db(pair, time_step, "01/02/20", db_str)
+    get_data_until_now(pair, time_step, db_str)
 
 if __name__ == "__main__":
     # test_1()
 
     # test_2()
     test_3()
+    # test_4()
