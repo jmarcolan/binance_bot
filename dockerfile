@@ -31,7 +31,9 @@ COPY --chown=developer:developer ./app/requirements.txt /home/app/requirements.t
 RUN pip install -r /home/app/requirements.txt
 VOLUME /home/app/data
 
-COPY --chown=developer:developer ./app/ /home/app
+# COPY --chown=developer:developer ./app/ /home/app
+
+VOLUME /hom/app
 
 # COPY --chown=developer:developer ./gestao_dados/ /home/ethowatcher/gestao_dados
 # COPY --chown=developer:developer ./running_jupyter_mongo.sh /home/ethowatcher/running_jupyter_mongo.sh

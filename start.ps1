@@ -1,1 +1,1 @@
-docker run -p 8888:8888 -p 27017:27017 "bot"
+docker run -p 8888:8888 -p 27017:27017 "bot" -v "./data:/home/app/data"

@@ -1,6 +1,7 @@
 from configparser import ConfigParser
 from binance.spot import Spot
 from datetime import datetime
+import json
 
 config_object = ConfigParser()
 config_object.read("config.ini")
@@ -10,7 +11,11 @@ key_binance = config_object["keys"]
 
 
 
-
+def get_transaction_satus(symbol = "EURBUSD", orderId="137633428"):
+    client = Spot(api_key=key_binance['api_key'], api_secret=key_binance['api_secret'])
+    
+    response = client.get_order(symbol,  orderId=orderId)
+    return response
 
 #BNBBRL
 # THE BASE OF BNBBRL ARE THE BRL
@@ -44,10 +49,13 @@ def token_symbol_using_first(client:Spot, symbols, side, amount_token_base, pric
         'quantity': float('{:.{prec}f}'.format(qnt_ask, prec=step)),
         'price': price
         }
-        response = client.new_order(**params)
-        return True, response
+        try:
+            response = client.new_order(**params)
+            return True, response
+        except:
+            return False, {}
     else: 
-        return False, None
+        return False, {}
 
 def token_symbol_using_base(client:Spot, symbols, side, amount_token_base, price):
     ticker_info = client.ticker_price(symbols)
@@ -121,8 +129,20 @@ def get_historical_k_line(pair="EURBUSD", time_step = "1h", datetime_str = '20/1
 # {'symbol': 'EURBUSD', 'orderId': 134115308, 'orderListId': -1, 'clientOrderId': 'AUJeEtlqm64jDfkIP187nR', 'transactTime': 1674336191960, 'price': '1.07000000', 'origQty': '10.40000000', 'executedQty': '0.00000000', 'cummulativeQuoteQty': '0.00000000', 'status': 'NEW', 'timeInForce': 'GTC', 'type': 'LIMIT', 'side': 'BUY', 'workingTime': 1674336191960, 'fills': [], 'selfTradePreventionMode': 'NONE'}
 
 # def token_symbol_using_base(client:Spot, symbols, side, amount_token_base):
+def get_current_price(symbol='EURBUSD'):
+    client = Spot(api_key=key_binance['api_key'], api_secret=key_binance['api_secret'])
+    ticker_info = client.ticker_price(symbol)
+    print(ticker_info)
+    return round(float(ticker_info["price"]), 4)
 
 #  response = client.get_order("BTCUSDT", orderId="")
+def create_new_order(symbol='EURBUSD',type="SELL", qnt_base=11.9, price=1.06 ):
+    client = Spot(api_key=key_binance['api_key'], api_secret=key_binance['api_secret'])
+    r_worked, response = token_symbol_using_first(client, symbol, type,  qnt_base, price )
+
+    return r_worked, response
+
+
 def test_1():
 
     client = Spot()
@@ -130,15 +150,20 @@ def test_1():
     # BUY EURO POR USD USANDO O FIRST USANDO EURO
     
     # VENDE EURO POR USD USANDO O FIRST USANDO EURO
-    response = token_symbol_using_first(client, 'EURBUSD', "SELL", 11.9, 1.14 ) # vendendo 12 euro a 1.14
+    r_worked, response = token_symbol_using_first(client, 'EURBUSD', "SELL", 11.9, 1.0653 ) # vendendo 12 euro a 1.14
 
-    response = token_symbol_using_first(client, 'EURBUSD', "BUY", 11.9, 1.04 ) # comprando 12 euro a 1.04
+    # r_worked, response = token_symbol_using_first(client, 'EURBUSD', "BUY", 11.6, 1.065 ) # comprando 11.6 euro a 1.04
     # response = token_symbol_using_base(client, 'EURBUSD', "BUY", 12, 1.04 ) # comprando 12 euro a 1.04
     # response1 = token_symbol_using_base(client, 'EURBUSD', "BUY", 12, 1.06 )
     # response = buy_token_symbol_using_base(client, 'BNBBRL', "BUY", 11, 1600 )
     # print(response)
     # response = buy_token_symbol_using_base(client, 'BNBBRL', "SELL", 11, 1600 )
-    print(response)
+    with open(f"test_{response['status']}_sell_{response['orderId']}.json", "w") as file:
+        file.write(json.dumps(response))
+
+    # order_status = client.get_order("EURBUSD", orderId=response['orderId']) # STATUS NEW, CANCELED
+    
+    # print(response)
     # print(response1)
     # https://github.com/binance/binance-connector-python
 
@@ -157,11 +182,24 @@ def test_4():
     k_lines, first_k_line, last_k_line = get_historical_k_line("EURBUSD", "5m", 1671794100000) # if put some timestamp get all less the passing.
     print(first_k_line, last_k_line )
 
+def test_5():
+    client = Spot(api_key=key_binance['api_key'], api_secret=key_binance['api_secret'])
+    
+    response = client.get_order("EURBUSD", orderId="137633428")
+    with open(f"test_{response['status']}_{response['orderId']}.json", "w") as file:
+        file.write(json.dumps(response))
+    print(response)
+
+def test_6():
+    print(get_current_price())
+
 if __name__ == "__main__":
+    test_6()
     # test_1()
+    # test_5()
     # test_2()
     # test_3()
-    test_4()
+    # test_4()
     
     
     

@@ -169,6 +169,9 @@ def test_2():
     print(type(stmt))
 
 def test_3():
+    """
+    Getting data
+    """
     pair = "EURBUSD"
     time_step = "5m"
     db_str = "sqlite:////home/app/data/price_data_binance.db"
@@ -181,6 +184,8 @@ def test_4():
     db_str = "sqlite:////home/app/data/price_data_binance.db"
     save_to_db(pair, time_step, "01/02/20", db_str)
     get_data_until_now(pair, time_step, db_str)
+
+
 
 if __name__ == "__main__":
     # test_1()
