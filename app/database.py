@@ -111,7 +111,7 @@ class Bot_tran(Base):
     buy_qnt    = Column(String(100))
     
     def __repr__(self):
-        return f"bot={self.bot_id}, s_id= {self.sell_id}"
+        return f"`{self.ts_id} / bot={self.bot_id}, s_id= {self.sell_id}"
 # 
 # {ts_id, bot_id, buy_id, buy_satus:[new, filled, cancel], buy_qnt, sell_qnt, 
 # sell_id, sell_status:[new, filled, cancel], sell_qnt, sell_price}

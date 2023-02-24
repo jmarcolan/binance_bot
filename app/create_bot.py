@@ -32,7 +32,7 @@ def create_new_trans(dic_tran, db_url= "sqlite:////home/app/data/bot.db"):
 def get_list_transact_open(bot_id, value, db_url= "sqlite:////home/app/data/bot.db"):
     stmt = select(db_c.Bot_info).where(
         db_c.Bot_tran.bot_id.in_([bot_id])).where(
-        db_c.Bot_tran.sell_status.in_(["NEW", "WAIT"])).where(
+        db_c.Bot_tran.sell_status.in_(["NEW", "WAIT", "FILLED"])).where(
         db_c.Bot_tran.buy_satus.in_(["NEW", "WAIT", "WAIT_SELL"])).where(
         db_c.Bot_tran.buy_price <= value).where(
         db_c.Bot_tran.sell_price > value)
@@ -44,6 +44,21 @@ def get_list_transact_open(bot_id, value, db_url= "sqlite:////home/app/data/bot.
     k_lines = list(session.scalars(stmt))
     session.close()
     return k_lines
+
+def get_sell_buy_status(bot_id, sell_status= ["WAIT", "WAIT_BUY", "NEW", "FILLED", "CANCELED"], buy_status= ["WAIT", "WAIT_SELL", "NEW", "FILLED", "CANCELED"], db_url= "sqlite:////home/app/data/bot.db"):
+    stmt = select(db_c.Bot_tran).where(
+        db_c.Bot_tran.bot_id.in_([bot_id])).where(
+        db_c.Bot_tran.sell_status.in_(sell_status)).where(
+        db_c.Bot_tran.buy_satus.in_(buy_status)) 
+
+    engine = sqlalchemy.create_engine(db_url)
+    db_c.Base.metadata.create_all(engine)
+    session = Session(engine)
+    k_lines = list(session.scalars(stmt))
+    session.close()
+    return k_lines
+
+
 
 def get_sell_status(bot_id, status= ["WAIT", "WAIT_BUY", "NEW", "FILLED", "CANCELED"], db_url= "sqlite:////home/app/data/bot.db"):
     stmt = select(db_c.Bot_tran).where(
@@ -123,6 +138,7 @@ class BotGridDolar:
         # pass
         self.bot_info:db_c.Bot_info = get_bot_inf_by_id(bot_id)
         self.bot_id = self.bot_info.bot_id
+        self.delta_price = 0.001
         self._create_grid_bot(self.bot_info.delta_price, self.bot_info.bot_price, self.bot_info.top_price )
     
     def _create_grid_bot(self, delta_price, value_init, value_end):
@@ -152,17 +168,19 @@ class BotGridDolar:
         create_new_trans(dic_bot)
 
     def new_transaction(self, value_pair):
-        cur_step = list(filter( lambda x: x[0] <= value_pair and x[1]> value_pair, self.pair_step))
+        cur_step = list(filter( lambda x: x[0] <= value_pair and x[1] > value_pair, self.pair_step))
         r_out = len(cur_step) ==0 
         if r_out:
+            print("its on the limiar or out of range")
             return False
-        
+        print("the current step", cur_step[0])
         cur_step = cur_step[0]
         t_transactio_open = self._check_if_has_transaction(self.bot_id, value_pair)
         print(t_transactio_open)
         if t_transactio_open:
             return False
         
+
         self._creat_new_transaction( cur_step[1], cur_step[0], self.bot_id, self.bot_info.symbol, self.bot_info.quantity )
         return True
 
@@ -178,6 +196,7 @@ class SincWithBinance:
 
     def _update_transaction_bot(self):
         def create_new_transaction_sell(t_wait:db_c.Bot_tran):
+            print(t_wait)
             r_worked, response = bi_tra.create_new_order(t_wait.symbol, "SELL", round(float(t_wait.sell_qnt), 3), round(float(t_wait.sell_price), 3))
             if r_worked:
                 td.create_new_transaction([response], self.db_url)
@@ -224,7 +243,7 @@ class SincWithBinance:
         ls_transac = get_sell_status(self.bot_id, ["NEW"] ,self.db_url)
         _ = list(map(check_if_sell_filled, ls_transac))
 
-        ls_transac = get_sell_status(self.bot_id, ["FILLED"] ,self.db_url)
+        ls_transac = get_sell_buy_status(self.bot_id, ["FILLED"], ["WAIT", "WAIT_SELL"], self.db_url)
         _ = list(map(create_new_transaction_buy, ls_transac))
 
         ls_transac = get_buy_status(self.bot_id, ["NEW"] ,self.db_url)
@@ -263,7 +282,7 @@ def keep_live():
         print(price)
         bot.new_transaction(price)
         sinc.sinc_db_binance()
-        time.sleep(3)
+        time.sleep(10)
 
 
 if __name__ == "__main__":

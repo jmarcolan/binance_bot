@@ -23,10 +23,10 @@ def get_transaction_satus(symbol = "EURBUSD", orderId="137633428"):
 def token_symbol_using_first(client:Spot, symbols, side, amount_token_base, price):
     ticker_info = client.ticker_price(symbols)
     if side == "BUY" and float(ticker_info["price"]) < price:
-        print("buy more than the current price")
+        print("buy more than the current price=", price)
         return False, None
     if side == "SELL" and float(ticker_info["price"]) > price:
-        print("Sell less than the current price")
+        print("Sell less than the current price", price)
         return False, None
 
     pair_info = client.exchange_info(symbol=symbols)
@@ -60,7 +60,7 @@ def token_symbol_using_first(client:Spot, symbols, side, amount_token_base, pric
 def token_symbol_using_base(client:Spot, symbols, side, amount_token_base, price):
     ticker_info = client.ticker_price(symbols)
     if side == "BUY" and float(ticker_info["price"]) < price:
-        print("buy more than the current price")
+        print("buy more than the current price", price)
         return False, None
     if side == "SELL" and float(ticker_info["price"]) > price:
         print("Sell less than the current price")
