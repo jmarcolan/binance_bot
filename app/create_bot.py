@@ -113,14 +113,7 @@ def upate_bot_transact(t_wait:db_c.Bot_tran, db_url):
 
 
     
-def test_create_new_bot():
-    dic_bot = {"symbol"      : "EURBUSD",
-        "delta_price" : "0.004",
-        "bot_price"   : "0.8",
-        "top_price"   : "1.2",
-        "quantity"    : "11.9"}
-    
-    create_new_bot(dic_bot)
+
 
 def get_bot_inf_by_id(bot_id, db_url= "sqlite:////home/app/data/bot.db"):
     stmt = select(db_c.Bot_info).where(db_c.Bot_info.bot_id.in_([bot_id]))
@@ -138,6 +131,7 @@ class BotGridDolar:
         # pass
         self.bot_info:db_c.Bot_info = get_bot_inf_by_id(bot_id)
         self.bot_id = self.bot_info.bot_id
+        # self.account_id = account_id
         self.delta_price = 0.001
         self._create_grid_bot(self.bot_info.delta_price, self.bot_info.bot_price, self.bot_info.top_price )
     
@@ -272,6 +266,17 @@ def test_update():
     ls_tran = list(map(create_new_transaction, ls_transac))
 
 
+def test_create_new_bot():
+    dic_bot = {"symbol"      : "EURBUSD",
+        "delta_price" : "0.004",
+        "bot_price"   : "0.8",
+        "top_price"   : "1.2",
+        "quantity"    : "11.9",
+        "count_id": 1,
+        "type_bot": "SELLBUY"
+        }
+    
+    create_new_bot(dic_bot)
 
 def keep_live():
     bot = BotGridDolar(1)
@@ -286,7 +291,7 @@ def keep_live():
 
 
 if __name__ == "__main__":
-    # test_create_new_bot()
+    test_create_new_bot()
     keep_live()
     # price = bi_tra.get_current_price()
     # test_update()

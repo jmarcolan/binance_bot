@@ -86,11 +86,13 @@ class B_transaction(Base):
 class Bot_info(Base):
     __tablename__ = 'Bot_info'
     bot_id      =  Column(Integer(), auto_increment=True, primary_key=True)
+    count_id   = Column(Integer())
     symbol      = Column(String(100))
     delta_price = Column(String(100))
     bot_price   = Column(String(100))
     top_price   = Column(String(100))
     quantity    = Column(String(100))
+    type_bot    = Column(String(100))
     
     def __repr__(self):
         return f"orderid = {self.bot_id} ,symbol = {self.symbol}"
@@ -98,6 +100,7 @@ class Bot_info(Base):
 class Bot_tran(Base):
     __tablename__ = 'Bot_tran'
     ts_id =  Column(Integer(), auto_increment=True, primary_key=True)
+    # count_id   = Column(Integer())
     bot_id = Column(Integer())
     symbol = Column(String(100)) 
     sell_id     = Column(Integer())
@@ -112,7 +115,36 @@ class Bot_tran(Base):
     
     def __repr__(self):
         return f"`{self.ts_id} / bot={self.bot_id}, s_id= {self.sell_id}"
-# 
+
+class Account(Base):
+    __tablename__ = 'Account'
+    count_id   = Column(Integer(), auto_increment=True, primary_key=True)
+    api_key    = Column(String(300))
+    api_secret = Column(String(300))
+    name       = Column(String(300))
+    password   = Column(String(300))
+    def __repr__(self):
+        return f"{self.count_id} ,name={self.name}"
+
+class Bot_account_coin_history(Base):
+    __tablename__ = 'Bot_account_coin_history'
+    hist_id =  Column(Integer(), auto_increment=True, primary_key=True)
+    count_id = Column(Integer())
+    BUSDBRL = Column(String(100))
+    EURBUSD = Column(String(100))
+    asset = Column(String(100))
+    btcValuation =  Column(String(100))
+    free = Column(String(100))
+    freeze = Column(String(100))
+    ipoable = Column(String(100))
+    locked = Column(String(100))
+    time_ms = Column(Integer())
+    total = Column(String(100))
+    withdrawing = Column(String(100))
+
+    def __repr__(self):
+        return f"`{self.count_id} / bot={self.hist_id},total={self.total}, time{self.time_ms}"
+    # 
 # {ts_id, bot_id, buy_id, buy_satus:[new, filled, cancel], buy_qnt, sell_qnt, 
 # sell_id, sell_status:[new, filled, cancel], sell_qnt, sell_price}
 # 

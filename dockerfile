@@ -1,5 +1,6 @@
 # FROM mongo:4.4
 FROM ubuntu
+# FROM apache/airflow:latest
 RUN apt-get update &&\
     apt-get install -y wget
 # RUN mkdir /usr/app
@@ -19,8 +20,9 @@ RUN cd $CONDA_DIR/bin && conda init
 # RUN pip install pymc3
 RUN pip install notebook
 # RUN pip install scikit-learn
-
+RUN pip install apache-airflow
 # VOLUME mongo_data/ /data/db/
+
 
 RUN  mkdir /home/app/
 RUN  mkdir /data
@@ -32,8 +34,11 @@ RUN pip install -r /home/app/requirements.txt
 VOLUME /home/app/data
 
 # COPY --chown=developer:developer ./app/ /home/app
-
-VOLUME /hom/app
+# RUN  mkdir /home/app/airflow
+VOLUME /root/airflow/dags/
+VOLUME /root/airflow/plugins/
+VOLUME /root/airflow/logs/
+VOLUME /home/app/
 
 # COPY --chown=developer:developer ./gestao_dados/ /home/ethowatcher/gestao_dados
 # COPY --chown=developer:developer ./running_jupyter_mongo.sh /home/ethowatcher/running_jupyter_mongo.sh

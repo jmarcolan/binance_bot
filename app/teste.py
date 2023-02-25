@@ -2,10 +2,12 @@ from configparser import ConfigParser
 from binance.spot import Spot
 from datetime import datetime
 import json
+import pprint
 
 config_object = ConfigParser()
 config_object.read("config.ini")
 key_binance = config_object["keys"]
+
 
 
 
@@ -193,8 +195,38 @@ def test_5():
 def test_6():
     print(get_current_price())
 
+def get_user_asset_qnt(symbol, qnt_round=4):
+    client = Spot(api_key=key_binance['api_key'], api_secret=key_binance['api_secret'])
+    # res = client.coin_info()
+    # res = client.asset_detail()
+    res = client.user_asset(asset=symbol)[0]
+
+    res["total"] = str(round(float(res["free"]) + float(res["locked"]) + float(res["freeze"]) + float(res["withdrawing"]) + float(res["ipoable"]),qnt_round))
+    res["time_ms"] = int(datetime.now().timestamp()*1000)
+    res["EURBUSD"] = str(get_current_price("EURBUSD"))
+    res["BUSDBRL"] = str(get_current_price("BUSDBRL"))
+    return res
+
+
+# def get_list_user_asset(symbol, qnt_round=4):
+
+
+#     pass
+
+def test_7():
+    # client = Spot(api_key=key_binance['api_key'], api_secret=key_binance['api_secret'])
+    # res = client.coin_info()
+    # res = client.asset_detail()
+    res = get_user_asset_qnt("EUR")
+    pp = pprint.PrettyPrinter(depth=6)
+    pp.pprint(res)
+    res = get_user_asset_qnt("BUSD")
+    pp.pprint(res)
+    # print(res)
+
 if __name__ == "__main__":
-    test_6()
+    test_7()
+    # test_6()
     # test_1()
     # test_5()
     # test_2()
