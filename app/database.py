@@ -87,6 +87,7 @@ class Bot_info(Base):
     __tablename__ = 'Bot_info'
     bot_id      =  Column(Integer(), auto_increment=True, primary_key=True)
     count_id   = Column(Integer())
+    status = Column(String(100)) # ACTIVATED
     symbol      = Column(String(100))
     delta_price = Column(String(100))
     bot_price   = Column(String(100))

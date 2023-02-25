@@ -20,7 +20,7 @@ RUN cd $CONDA_DIR/bin && conda init
 # RUN pip install pymc3
 RUN pip install notebook
 # RUN pip install scikit-learn
-RUN pip install apache-airflow
+# RUN pip install apache-airflow
 # VOLUME mongo_data/ /data/db/
 
 
@@ -35,9 +35,6 @@ VOLUME /home/app/data
 
 # COPY --chown=developer:developer ./app/ /home/app
 # RUN  mkdir /home/app/airflow
-VOLUME /root/airflow/dags/
-VOLUME /root/airflow/plugins/
-VOLUME /root/airflow/logs/
 VOLUME /home/app/
 
 # COPY --chown=developer:developer ./gestao_dados/ /home/ethowatcher/gestao_dados
@@ -57,6 +54,8 @@ EXPOSE 8888
 EXPOSE 27017
 # exposing interface port
 EXPOSE  5000
+
+EXPOSE 8080
 # CMD [ "sh", "/home/ethowatcher/running_jupyter_mongo.sh" ]
 
 CMD ["jupyter", "notebook", "--ip", "0.0.0.0", "--port", "8888", "--allow-root" ]

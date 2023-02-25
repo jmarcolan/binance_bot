@@ -5,7 +5,12 @@ from sqlalchemy import select
 import sqlalchemy
 
 import teste as bi_tra
+from configparser import ConfigParser
 
+
+config_object = ConfigParser()
+config_object.read("config.ini")
+key_binance = config_object["keys"]
 
 
 def create_new_account(dic_bot, db_url= "sqlite:////home/app/data/bot.db"):
@@ -36,9 +41,9 @@ def get_qnt_coin_user_and_save(count_id, symbol, db_url= "sqlite:////home/app/da
 def test_1():
     create_user = {
         # "count_id"    Column(Integer(), auto_increment=True, primary_key=True)
-        "api_key"    : "teste",
-        "api_secret" : "teste",
-        "name"       : "teste",
+        "api_key"    : key_binance['api_key'],
+        "api_secret" : key_binance['api_secret'],
+        "name"       : "jmarcolan",
         "password"   : "teste"
     }
     create_new_account(create_user)

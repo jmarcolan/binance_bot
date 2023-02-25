@@ -10,6 +10,9 @@ key_binance = config_object["keys"]
 
 
 
+def create_client_binance(api_key, api_secret ):
+    client = Spot(api_key=api_key, api_secret=api_secret)
+    return client
 
 
 

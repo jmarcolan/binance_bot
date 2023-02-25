@@ -268,6 +268,7 @@ def test_update():
 
 def test_create_new_bot():
     dic_bot = {"symbol"      : "EURBUSD",
+        "status": "ACTIVATED",
         "delta_price" : "0.004",
         "bot_price"   : "0.8",
         "top_price"   : "1.2",
