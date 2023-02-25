@@ -1,5 +1,5 @@
-from teste import get_historical_k_line
-import database as db_c
+from binance_bot.teste import get_historical_k_line
+import binance_bot.database as db_c
 import sqlalchemy
 from sqlalchemy.orm import Session
 from sqlalchemy import select

@@ -1,16 +1,16 @@
-import database as db_c
+import binance_bot.database as db_c
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 import sqlalchemy
 
-import binance_router as bi_tra
+import binance_bot.binance_router as bi_tra
 from configparser import ConfigParser
 
 
-config_object = ConfigParser()
-config_object.read("config.ini")
-key_binance = config_object["keys"]
+# config_object = ConfigParser()
+# config_object.read("config.ini")
+# key_binance = config_object["keys"]
 
 def get_account_and_client(acc_id, db_url= "sqlite:////home/app/data/bot.db"):
     stmt = select(db_c.Account).where(db_c.Account.count_id.in_([acc_id]))
@@ -24,7 +24,7 @@ def get_account_and_client(acc_id, db_url= "sqlite:////home/app/data/bot.db"):
     cliente = bi_tra.get_client_binance(user.api_key, user.api_secret)
     return user, cliente
 
-def get_account_and_client_by_user(user, db_url= "sqlite:////home/app/data/bot.db"):
+def get_account_by_user(user, db_url= "sqlite:////home/app/data/bot.db"):
     stmt = select(db_c.Account).where(db_c.Account.name.in_([user]))
     engine = sqlalchemy.create_engine(db_url)
     db_c.Base.metadata.create_all(engine)
@@ -32,9 +32,7 @@ def get_account_and_client_by_user(user, db_url= "sqlite:////home/app/data/bot.d
     k_lines = list(session.scalars(stmt))
     session.close()
     user = k_lines[0]
-
-    cliente = bi_tra.get_client_binance(user.api_key, user.api_secret)
-    return user, cliente
+    return user
 
 def create_new_account(dic_bot, db_url= "sqlite:////home/app/data/bot.db"):
     engine = sqlalchemy.create_engine(db_url)
@@ -62,6 +60,10 @@ def get_qnt_coin_user_and_save(client, count_id, symbol, db_url= "sqlite:////hom
     # pass
 
 def test_1():
+    key_binance = {
+        "api_key": "DOX8Lv3b5tAB17Gmo1z5q62pSV66iXOIYm4qgJLgW42OkIvZphKthyxgZ2DDZAqG",
+        "api_secret": "yK2dQIkRDVrMnN5LtFjVbdsJHoHzu1LIuLrusIQ0YQ5EzlLCYyj6sQPOEFRHNwrA"
+    }
     create_user = {
         # "count_id"    Column(Integer(), auto_increment=True, primary_key=True)
         "api_key"    : key_binance['api_key'],

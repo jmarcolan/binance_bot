@@ -1,15 +1,28 @@
-import database as db_c
+import binance_bot.database as db_c
 import sqlalchemy
 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 
-import transaction_database as td
-import binance_router as bi_tra
-import create_account as acc
+import binance_bot.transaction_database as td
+import binance_bot.binance_router as bi_tra
+import binance_bot.create_account as acc
 import copy
 
 import time
+
+
+def get_all_bot_activate(db_url= "sqlite:////home/app/data/bot.db"):
+    stmt = select(db_c.Bot_info).where(
+        db_c.Bot_info.status.in_(["ACTIVATED"])) 
+
+    engine = sqlalchemy.create_engine(db_url)
+    db_c.Base.metadata.create_all(engine)
+    session = Session(engine)
+    k_lines = list(session.scalars(stmt))
+    session.close()
+    return k_lines
+
 
 def create_new_bot(dic_bot, db_url= "sqlite:////home/app/data/bot.db"):
 
@@ -127,9 +140,11 @@ def get_bot_inf_by_id(bot_id, db_url= "sqlite:////home/app/data/bot.db"):
 
 
 class BotGridDolar:
-    def __init__(self, bot_id, client) -> None:
+    def __init__(self, bot_id, db_url="sqlite:////home/app/data/bot.db") -> None:
         # pass
+        self.db_url = db_url
         self.bot_info:db_c.Bot_info = get_bot_inf_by_id(bot_id)
+        user, client = acc.get_account_and_client(self.bot_info.count_id, db_url= db_url)
         self.bot_id = self.bot_info.bot_id
         self.client = client
 
@@ -146,10 +161,8 @@ class BotGridDolar:
         top_price = list(map(lambda x: round(x,3), map(lambda value :(value*delta_price_f + value_init_f),range(1, d_value))))
         self.pair_step = list(zip(bot_price,top_price))
     
-
-
     def _check_if_has_transaction(self, bot_id, value_pair):
-        ls_tra = get_list_transact_open(bot_id, value_pair)
+        ls_tra = get_list_transact_open(bot_id, value_pair, db_url=self.db_url)
         print(ls_tra)
         return len(ls_tra) > 0
 
@@ -162,7 +175,7 @@ class BotGridDolar:
                    "buy_price"  : str(bot_price),
                    "buy_satus"  : "WAIT_SELL",
                    "buy_qnt"   : str(quantity)}
-        create_new_trans(dic_bot)
+        create_new_trans(dic_bot, self.db_url)
 
     def new_transaction(self, value_pair):
         cur_step = list(filter( lambda x: x[0] <= value_pair and x[1] > value_pair, self.pair_step))
@@ -183,13 +196,15 @@ class BotGridDolar:
 
 
 class SincWithBinance:
-    def __init__(self, db_url, bot_id, client) -> None:
+    def __init__(self, db_url, bot_id) -> None:
         self.db_url = db_url
         self.bot_id = bot_id
+        self.bot_info:db_c.Bot_info = get_bot_inf_by_id(bot_id)
+        user, client = acc.get_account_and_client(self.bot_info.count_id, db_url=db_url)
         self.client = client
     
     def _update_transacition_binance(self):
-        td.update_new_transaction(self.db_url)
+        td.update_new_transaction(self.client, self.db_url)
 
 
     def _update_transaction_bot(self):
@@ -248,7 +263,6 @@ class SincWithBinance:
         _ = list(map(check_if_buy_filled, ls_transac))
         
 
-
     def sinc_db_binance(self):
         self._update_transacition_binance()
         self._update_transaction_bot()
@@ -284,10 +298,11 @@ def test_create_new_bot():
     create_new_bot(dic_bot)
 
 def keep_live():
-    user, client = acc.get_account_and_client(1, db_url= "sqlite:////home/app/data/bot.db")
-    bot = BotGridDolar(1, client)
-    sinc = SincWithBinance("sqlite:////home/app/data/bot.db", 1, client)
+    
+    bot = BotGridDolar(1)
+    sinc = SincWithBinance("sqlite:////home/app/data/bot.db", 1)
 
+    user, client = acc.get_account_and_client(1, db_url= "sqlite:////home/app/data/bot.db")
     while True:
         price = bi_tra.get_current_price(client,bot.bot_info.symbol)
         print(price)
@@ -296,9 +311,29 @@ def keep_live():
         time.sleep(10)
 
 
+def test_get_all(db_url="sqlite:////home/app/data/bot.db"):
+    ls_bot_act = get_all_bot_activate()
+    for bot_activ in ls_bot_act:
+        print(bot_activ)
+        bot_id = bot_activ.bot_id
+        acc_id = bot_activ.count_id
+        bot = BotGridDolar(bot_id)
+        sinc = SincWithBinance(db_url, bot_id)
+        user, client = acc.get_account_and_client(acc_id, db_url= db_url)
+        price = bi_tra.get_current_price(client, bot.bot_info.symbol)
+        print(price)
+        bot.new_transaction(price)
+        sinc.sinc_db_binance()
+
+    
 if __name__ == "__main__":
-    test_create_new_bot()
-    keep_live()
+    while True:
+        test_get_all()
+        time.sleep(10)
+    
+    
+    # test_create_new_bot()
+    # keep_live()
     # price = bi_tra.get_current_price()
     # test_update()
     # 

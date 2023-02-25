@@ -4,9 +4,9 @@ from datetime import datetime
 import json
 import pprint
 
-config_object = ConfigParser()
-config_object.read("config.ini")
-key_binance = config_object["keys"]
+# config_object = ConfigParser()
+# config_object.read("config.ini")
+# key_binance = config_object["keys"]
 
 
 

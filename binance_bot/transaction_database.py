@@ -1,6 +1,6 @@
-from teste import get_transaction_satus
+from binance_bot.binance_router import get_transaction_satus
 
-import database as db_c
+import binance_bot.database as db_c
 import sqlalchemy
 from sqlalchemy.orm import Session
 from sqlalchemy import select, update
@@ -54,7 +54,7 @@ def get_transaction_binance( id_transac, db_url):
     return t_open[0]
 
 
-def update_new_transaction(db_url = "sqlite:////home/app/data/binance_transaction.db"):
+def update_new_transaction(client, db_url = "sqlite:////home/app/data/binance_transaction.db"):
     def create_db_tran(dic_binance:Dict):
         if dic_binance.get("fills", None) != None:
             del dic_binance["fills"]
@@ -90,7 +90,7 @@ def update_new_transaction(db_url = "sqlite:////home/app/data/binance_transactio
     session.close()
 
     t_open_id = list(map(lambda x: (x.symbol, x.orderId) , t_open))
-    t_updated = list(map(lambda x: get_transaction_satus(x[0], x[1]), t_open_id))
+    t_updated = list(map(lambda x: get_transaction_satus(client, x[0], x[1]), t_open_id))
 
     ls_a = list(map(update_db, t_updated))
     print(len(t_open))
