@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 import transaction_database as td
-import teste as bi_tra
-
+import binance_router as bi_tra
+import create_account as acc
 import copy
 
 import time
@@ -127,10 +127,13 @@ def get_bot_inf_by_id(bot_id, db_url= "sqlite:////home/app/data/bot.db"):
 
 
 class BotGridDolar:
-    def __init__(self, bot_id) -> None:
+    def __init__(self, bot_id, client) -> None:
         # pass
         self.bot_info:db_c.Bot_info = get_bot_inf_by_id(bot_id)
         self.bot_id = self.bot_info.bot_id
+        self.client = client
+
+
         # self.account_id = account_id
         self.delta_price = 0.001
         self._create_grid_bot(self.bot_info.delta_price, self.bot_info.bot_price, self.bot_info.top_price )
@@ -180,9 +183,10 @@ class BotGridDolar:
 
 
 class SincWithBinance:
-    def __init__(self, db_url, bot_id) -> None:
+    def __init__(self, db_url, bot_id, client) -> None:
         self.db_url = db_url
         self.bot_id = bot_id
+        self.client = client
     
     def _update_transacition_binance(self):
         td.update_new_transaction(self.db_url)
@@ -191,7 +195,7 @@ class SincWithBinance:
     def _update_transaction_bot(self):
         def create_new_transaction_sell(t_wait:db_c.Bot_tran):
             print(t_wait)
-            r_worked, response = bi_tra.create_new_order(t_wait.symbol, "SELL", round(float(t_wait.sell_qnt), 3), round(float(t_wait.sell_price), 3))
+            r_worked, response = bi_tra.create_new_order(self.client, t_wait.symbol, "SELL", round(float(t_wait.sell_qnt), 3), round(float(t_wait.sell_price), 3))
             if r_worked:
                 td.create_new_transaction([response], self.db_url)
                 t_wait.sell_id = response["orderId"]
@@ -201,7 +205,7 @@ class SincWithBinance:
             return response
 
         def create_new_transaction_buy(t_filled:db_c.Bot_tran):
-            r_worked, response = bi_tra.create_new_order(t_filled.symbol, "BUY", round(float(t_filled.buy_qnt), 3), round(float(t_filled.buy_price), 3))
+            r_worked, response = bi_tra.create_new_order(self.client, t_filled.symbol, "BUY", round(float(t_filled.buy_qnt), 3), round(float(t_filled.buy_price), 3))
             if r_worked:
                 td.create_new_transaction([response], self.db_url)
                 t_filled.buy_id = response["orderId"]
@@ -280,11 +284,12 @@ def test_create_new_bot():
     create_new_bot(dic_bot)
 
 def keep_live():
-    bot = BotGridDolar(1)
-    sinc = SincWithBinance("sqlite:////home/app/data/bot.db", 1)
+    user, client = acc.get_account_and_client(1, db_url= "sqlite:////home/app/data/bot.db")
+    bot = BotGridDolar(1, client)
+    sinc = SincWithBinance("sqlite:////home/app/data/bot.db", 1, client)
 
     while True:
-        price = bi_tra.get_current_price()
+        price = bi_tra.get_current_price(client,bot.bot_info.symbol)
         print(price)
         bot.new_transaction(price)
         sinc.sinc_db_binance()
