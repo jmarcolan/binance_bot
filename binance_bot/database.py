@@ -4,7 +4,8 @@ import sqlalchemy
 
 from sqlalchemy import Column, String, Integer, Boolean
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+# from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session
 from datetime import datetime
 
@@ -24,9 +25,9 @@ from datetime import datetime
 #     takes_buy_queote_vol: str
 #     ignore: str
 
-
-class Base(DeclarativeBase):
-    pass
+Base = declarative_base()
+# class Base(declarative_base):
+#     pass
 
 class K_line_h(Base):
     __tablename__ = 'K_line'

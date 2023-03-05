@@ -1,44 +1,50 @@
 # FROM mongo:4.4
-FROM ubuntu
+# FROM ubuntu
+FROM apache/airflow:2.5.1
 # FROM apache/airflow:latest
-RUN apt-get update &&\
-    apt-get install -y wget
-# RUN mkdir /usr/app
-# COPY miniconda.sh /usr/app
-# RUN bash /usr/app/miniconda.sh -b -p /opt/conda
+# USER root
+# RUN apt-get update &&\
+#     apt-get install -y wget
+# # RUN mkdir /usr/app
+# # COPY miniconda.sh /usr/app
+# # RUN bash /usr/app/miniconda.sh -b -p /opt/conda
 
-# Install miniconda
-ENV CONDA_DIR /opt/conda
-# RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+# # Install miniconda
+# ENV CONDA_DIR /opt/conda
+# # RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh && \
+# #      /bin/bash ~/miniconda.sh -b -p /opt/conda
+# RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_4.11.0-Linux-x86_64.sh -O ~/miniconda.sh && \
 #      /bin/bash ~/miniconda.sh -b -p /opt/conda
-RUN wget --quiet https://repo.anaconda.com/miniconda/Miniconda3-py38_4.11.0-Linux-x86_64.sh -O ~/miniconda.sh && \
-     /bin/bash ~/miniconda.sh -b -p /opt/conda
 
-# Put conda in path so we can use conda activate
-ENV PATH=$CONDA_DIR/bin:$PATH
-RUN cd $CONDA_DIR/bin && conda init 
+# # Put conda in path so we can use conda activate
+# ENV PATH=$CONDA_DIR/bin:$PATH
+# RUN cd $CONDA_DIR/bin && conda init 
 # RUN pip install pymc3
+USER airflow
 RUN pip install notebook
 # RUN pip install scikit-learn
 # RUN pip install apache-airflow
 # VOLUME mongo_data/ /data/db/
 
-
+USER root
 RUN  mkdir /home/app/
 RUN  mkdir /data
 RUN  cd /home/app/
-WORKDIR /home/app/
+# WORKDIR /home/app/
 
 COPY ./binance_bot/requirements.txt /home/app/binance_bot/requirements.txt
+USER airflow
 RUN pip install -r /home/app/binance_bot/requirements.txt
 # RUN pip install -e ./binance_bot/binance_bot
-VOLUME /home/app/data
+USER root
+# VOLUME /home/app/data
 
 # COPY --chown=developer:developer ./app/ /home/app
 # RUN  mkdir /home/app/airflow
-VOLUME /home/app/
+# VOLUME /home/app/
 
 COPY . /home/app/binance_bot/
+USER airflow
 RUN pip install -e /home/app/binance_bot/
 # COPY --chown=developer:developer ./gestao_dados/ /home/ethowatcher/gestao_dados
 # COPY --chown=developer:developer ./running_jupyter_mongo.sh /home/ethowatcher/running_jupyter_mongo.sh
@@ -61,6 +67,6 @@ EXPOSE  5000
 EXPOSE 8080
 # CMD [ "sh", "/home/ethowatcher/running_jupyter_mongo.sh" ]
 
-CMD ["jupyter", "notebook", "--ip", "0.0.0.0", "--port", "8888", "--allow-root" ]
+# CMD ["jupyter", "notebook", "--ip", "0.0.0.0", "--port", "8888", "--allow-root" ]
 
 # docker run -p 8888:8888 -p 27017:27017 -p 5000:5000 -v C:\doutorado\software\EthoWatcherOS-docker\mongo_data\:/data/db "teste"

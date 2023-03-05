@@ -72,7 +72,8 @@ def test_1():
         "password"   : "teste"
     }
     create_new_account(create_user)
-def test_2():
+
+def getting_qnt_coins():
     user, client = get_account_and_client(1, db_url= "sqlite:////home/app/data/bot.db")
     get_qnt_coin_user_and_save(client, 1, "EUR")
     get_qnt_coin_user_and_save(client, 1, "BUSD")
@@ -81,4 +82,4 @@ def test_2():
 
 if __name__ == "__main__":
     test_1()
-    test_2()
+    getting_qnt_coins()
