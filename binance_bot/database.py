@@ -132,7 +132,7 @@ class Bot_account_coin_history(Base):
     hist_id =  Column(Integer(), auto_increment=True, primary_key=True)
     count_id = Column(Integer())
     BUSDBRL = Column(String(100))
-    EURBUSD = Column(String(100))
+    PAIRBUSD = Column(String(100))
     asset = Column(String(100))
     btcValuation =  Column(String(100))
     free = Column(String(100))

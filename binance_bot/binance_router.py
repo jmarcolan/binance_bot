@@ -8,7 +8,9 @@ import pprint
 # config_object.read("config.ini")
 # key_binance = config_object["keys"]
 
-
+def get_info_about_pair(client:Spot, symbols:str):
+    pair_info = client.exchange_info(symbol=symbols)
+    return pair_info
 
 def get_client_binance(api_key, api_secret ):
     client = Spot(api_key=api_key, api_secret=api_secret)
@@ -23,6 +25,15 @@ def get_transaction_satus(client:Spot, symbol = "EURBUSD", orderId="137633428"):
 # THE BASE OF BNBBRL ARE THE BRL
 # THE BASE OF EURBUSD are BUSD
 def token_symbol_using_first(client:Spot, symbols, side, amount_token_base, price):
+    def qnt_zeros(numero):
+        # numero = numero
+        contador = 0
+        while numero < 1 :
+            contador += 1
+            numero = numero*10
+
+        return contador
+
     ticker_info = client.ticker_price(symbols)
     if side == "BUY" and float(ticker_info["price"]) < price:
         print("buy more than the current price=", price)
@@ -34,7 +45,11 @@ def token_symbol_using_first(client:Spot, symbols, side, amount_token_base, pric
     pair_info = client.exchange_info(symbol=symbols)
     asset_precision = pair_info["symbols"][0]["baseAssetPrecision"]
     filter_s = list(filter(lambda x: x["filterType"] == "LOT_SIZE" , pair_info["symbols"][0]["filters"]))[0]
-    step = filter_s['stepSize'].rfind("1") - 1
+    filter_price_filter = list(filter(lambda x: x["filterType"] == "PRICE_FILTER" , pair_info["symbols"][0]["filters"]))[0]
+    # step = qnt_zeros(float(filter_price_filter["tickSize"]))
+    # here gets the quantity of the fraction
+    step = qnt_zeros(float(filter_s['stepSize']))
+    # step = filter_s['stepSize'].rfind("1")
     min_qnt = float(list(filter(lambda x: x["filterType"] == "LOT_SIZE" , pair_info["symbols"][0]["filters"]))[0]["minQty"])
 
     # if side == "BUY":
@@ -92,7 +107,7 @@ def token_symbol_using_base(client:Spot, symbols, side, amount_token_base, price
         return True, response
     else: 
         return False, None
-
+# 139541366
 def get_current_price(client:Spot, symbol='EURBUSD'):
     # client = Spot(api_key=key_binance['api_key'], api_secret=key_binance['api_secret'])
     ticker_info = client.ticker_price(symbol)
@@ -106,15 +121,21 @@ def create_new_order(client, symbol='EURBUSD',type="SELL", qnt_base=11.9, price=
 
     return r_worked, response
 
-def get_user_asset_qnt(client:Spot, symbol, qnt_round=4):
+def get_user_asset_qnt(client:Spot, symbol:str, qnt_round=4):
     # client = Spot(api_key=key_binance['api_key'], api_secret=key_binance['api_secret'])
     # res = client.coin_info()
     # res = client.asset_detail()
     res = client.user_asset(asset=symbol)[0]
 
-    res["total"] = str(round(float(res["free"]) + float(res["locked"]) + float(res["freeze"]) + float(res["withdrawing"]) + float(res["ipoable"]),qnt_round))
+    res["total"] = float(res["free"]) + float(res["locked"]) + float(res["freeze"]) + float(res["withdrawing"]) + float(res["ipoable"])
     res["time_ms"] = int(datetime.now().timestamp()*1000)
-    res["EURBUSD"] = str(get_current_price(client,"EURBUSD"))
+    if(symbol == "BUSD"):
+        res["PAIRBUSD"] = 1
+    elif(symbol.upper() == "BRL"):
+        res["PAIRBUSD"] = str(get_current_price(client,"BUSDBRL"))
+    else:
+        res["PAIRBUSD"] = str(get_current_price(client,symbol.upper()+"BUSD"))
+
     res["BUSDBRL"] = str(get_current_price(client, "BUSDBRL"))
     return res
 
@@ -211,8 +232,36 @@ def test_7():
     pp.pprint(res)
     # print(res)
 
+def test_8():
+    def qnt_zeros(numero):
+        # numero = numero
+        contador = 0
+        while numero < 1 :
+            contador += 1
+            numero = numero*10
+
+        return contador
+
+    spot_client = Spot()
+    symbols = "BTCBRL"
+    info = get_info_about_pair(spot_client, symbols)
+    pair_info = spot_client.exchange_info(symbol=symbols)
+    # asset_precision = pair_info["symbols"][0]["baseAssetPrecision"]
+    filter_s = list(filter(lambda x: x["filterType"] == "LOT_SIZE" , pair_info["symbols"][0]["filters"]))[0]
+    price_precision = qnt_zeros(float(list(filter(lambda x: x["filterType"] == "PRICE_FILTER" , pair_info["symbols"][0]["filters"]))[0]["tickSize"]))
+    print(f"o preco pode ter ate {price_precision} casas decimais")
+    # precision da quantidade 
+    qunt_moeda_precision = qnt_zeros(float(filter_s['stepSize']))
+    print(f"a quantidade de moedas negociadsa pode ter até {qunt_moeda_precision} casas decimais")
+    
+    # step = filter_s['stepSize'].rfind("1")
+    min_qnt = float(list(filter(lambda x: x["filterType"] == "LOT_SIZE" , pair_info["symbols"][0]["filters"]))[0]["minQty"])
+
+    print(info)
+
+
 if __name__ == "__main__":
-    test_7()
+    test_8()
     # test_6()
     # test_1()
     # test_5()

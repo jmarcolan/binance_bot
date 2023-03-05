@@ -43,8 +43,8 @@ def create_new_trans(dic_tran, db_url= "sqlite:////home/app/data/bot.db"):
         session.commit()
 
 def get_list_transact_open(bot_id, value, db_url= "sqlite:////home/app/data/bot.db"):
-    stmt = select(db_c.Bot_info).where(
-        db_c.Bot_tran.bot_id.in_([bot_id])).where(
+    stmt = select(db_c.Bot_tran).where(
+        db_c.Bot_tran.bot_id == bot_id).where(
         db_c.Bot_tran.sell_status.in_(["NEW", "WAIT", "FILLED"])).where(
         db_c.Bot_tran.buy_satus.in_(["NEW", "WAIT", "WAIT_SELL"])).where(
         db_c.Bot_tran.buy_price <= value).where(
@@ -57,6 +57,24 @@ def get_list_transact_open(bot_id, value, db_url= "sqlite:////home/app/data/bot.
     k_lines = list(session.scalars(stmt))
     session.close()
     return k_lines
+
+
+def get_list_transact_open_buy(bot_id, value, db_url= "sqlite:////home/app/data/bot.db"):
+    stmt = select(db_c.Bot_tran).where(
+        db_c.Bot_tran.bot_id.in_([bot_id])).where(
+        db_c.Bot_tran.sell_status.in_(["NEW", "WAIT", "WAIT_BUY"])).where(
+        db_c.Bot_tran.buy_satus.in_(["NEW", "WAIT", "FILLED"])).where(
+        db_c.Bot_tran.buy_price <= value).where(
+        db_c.Bot_tran.sell_price > value)
+    
+
+    engine = sqlalchemy.create_engine(db_url)
+    db_c.Base.metadata.create_all(engine)
+    session = Session(engine)
+    k_lines = list(session.scalars(stmt))
+    session.close()
+    return k_lines
+
 
 def get_sell_buy_status(bot_id, sell_status= ["WAIT", "WAIT_BUY", "NEW", "FILLED", "CANCELED"], buy_status= ["WAIT", "WAIT_SELL", "NEW", "FILLED", "CANCELED"], db_url= "sqlite:////home/app/data/bot.db"):
     stmt = select(db_c.Bot_tran).where(
@@ -194,6 +212,32 @@ class BotGridDolar:
         self._creat_new_transaction( cur_step[1], cur_step[0], self.bot_id, self.bot_info.symbol, self.bot_info.quantity )
         return True
 
+class BotGridDolarBUY(BotGridDolar):
+    def __init__(self, bot_id, db_url="sqlite:////home/app/data/bot.db") -> None:
+        super().__init__(bot_id, db_url)
+    
+    def _check_if_has_transaction(self, bot_id, value_pair):
+        ls_tra = get_list_transact_open_buy(bot_id, value_pair, db_url=self.db_url)
+        print(ls_tra)
+        return len(ls_tra) > 0
+    
+    def _creat_new_transaction(self, top_price, bot_price,  bot_id,  symbol, quantity):
+        # isso é interessente para a operação de dolar gerar 
+        # euros, mas as orderm são muito pequenas para praticar ainda
+        # precisao da quantidade é 1 (ex. 11.9, 12.1) e não more (ex 11.93)
+        # qnt_other = float(bot_price) * float(quantity) # eurdol, isso fica dol
+        # qnt_sell  = round(qnt_other/ float(top_price),7)
+        qnt_sell = quantity
+        dic_bot = {"symbol"      : symbol, 
+                   "bot_id": bot_id,
+                   "sell_price" : str(top_price),
+                   "sell_status" : "WAIT_BUY",
+                   "sell_qnt"   : str(qnt_sell),
+                   "buy_price"  : str(bot_price),
+                   "buy_satus"  : "WAIT",
+                   "buy_qnt"   : str(quantity)}
+        create_new_trans(dic_bot, self.db_url)
+        
 
 class SincWithBinance:
     def __init__(self, db_url, bot_id) -> None:
@@ -268,6 +312,75 @@ class SincWithBinance:
         self._update_transaction_bot()
 
 
+class SincWithBinanceBUY(SincWithBinance):
+    def __init__(self, db_url, bot_id) -> None:
+        super().__init__(db_url, bot_id)
+    
+    def _update_transaction_bot(self):
+        def create_new_transaction_sell(t_wait:db_c.Bot_tran):
+            print(t_wait)
+            r_worked, response = bi_tra.create_new_order(self.client, t_wait.symbol, "SELL", float(t_wait.sell_qnt), float(t_wait.sell_price))
+            if r_worked:
+                td.create_new_transaction([response], self.db_url)
+                t_wait.sell_id = response["orderId"]
+                t_wait.sell_status = response["status"]
+                upate_bot_transact(t_wait, self.db_url)
+
+            return response
+
+        def create_new_transaction_buy(t_filled:db_c.Bot_tran):
+            r_worked, response = bi_tra.create_new_order(self.client, t_filled.symbol, "BUY", round(float(t_filled.buy_qnt), 3), round(float(t_filled.buy_price), 3))
+            if r_worked:
+                td.create_new_transaction([response], self.db_url)
+                t_filled.buy_id = response["orderId"]
+                t_filled.buy_satus = response["status"]
+                upate_bot_transact(t_filled, self.db_url)
+
+            return response
+        
+        def check_if_sell_filled(t_new:db_c.Bot_tran):
+            orderId =  t_new.sell_id
+            tran_binance = td.get_transaction_binance(orderId, self.db_url)
+            if tran_binance == None:
+                return False
+            
+            t_new.sell_status = tran_binance.status
+            upate_bot_transact(t_new, self.db_url)
+            # t_new.sell_price = tran_binance.price
+            # t_new.sell_qnt   = tran_binance.
+
+        def check_if_buy_filled(t_new:db_c.Bot_tran):
+            orderId =  t_new.buy_id
+            tran_binance = td.get_transaction_binance(orderId, self.db_url)
+            if tran_binance == None:
+                return False
+            
+            t_new.buy_satus = tran_binance.status
+            upate_bot_transact(t_new, self.db_url)
+
+
+        ls_transac = get_buy_status(self.bot_id, ["WAIT"] ,self.db_url)
+        _ = list(map(create_new_transaction_buy, ls_transac))
+        # get_buy_status
+        # create_new_transaction_buy
+
+        ls_transac = get_buy_status(self.bot_id, ["NEW"] ,self.db_url)
+        _ = list(map(check_if_buy_filled, ls_transac))
+        # get_buy_status
+        # check_if_buy_filled
+
+        ls_transac = get_sell_buy_status(self.bot_id, ["WAIT", "WAIT_BUY"], ["FILLED"], self.db_url)
+        _ = list(map(create_new_transaction_sell, ls_transac))
+
+        # get_sell_buy_status  ["WAIT", "WAIT_BUY"], ["FILLED"]
+        # create_new_transaction_sell
+
+        ls_transac = get_sell_status(self.bot_id, ["NEW"] ,self.db_url)
+        _ = list(map(check_if_sell_filled, ls_transac))
+        # get_sell_status
+        # check_if_sell_filled
+    
+
 def test_update():
     def create_new_transaction(t_wait:db_c.Bot_tran):
             
@@ -297,6 +410,18 @@ def test_create_new_bot():
     
     create_new_bot(dic_bot)
 
+def test_create_new_bot_buy_sell():
+    dic_bot = {"symbol"      : "EURBUSD",
+        "status": "ACTIVATED",
+        "delta_price" : "0.004",
+        "bot_price"   : "0.802",
+        "top_price"   : "1.2",
+        "quantity"    : "11.9",
+        "count_id": 1,
+        "type_bot": "BUYSELL"
+        }
+    
+    create_new_bot(dic_bot)
 def keep_live():
     
     bot = BotGridDolar(1)
@@ -325,11 +450,27 @@ def test_get_all(db_url="sqlite:////home/app/data/bot.db"):
         bot.new_transaction(price)
         sinc.sinc_db_binance()
 
-    
-if __name__ == "__main__":
+def test_kepp_alive_buy_sell():
+    bot = BotGridDolarBUY(1)
+    sinc = SincWithBinanceBUY("sqlite:////home/app/data/bot.db", 1)
+
+    user, client = acc.get_account_and_client(1, db_url= "sqlite:////home/app/data/bot.db")
     while True:
-        test_get_all()
+        price = bi_tra.get_current_price(client,bot.bot_info.symbol)
+        print(price)
+        bot.new_transaction(price)
+        sinc.sinc_db_binance()
         time.sleep(10)
+
+
+if __name__ == "__main__":
+    # test_create_new_bot_buy_sell()
+    # A skelleton dresed as king siting in a trone, with his hand holdin his head, in a foggy dungeon, his his green tunic.
+    test_kepp_alive_buy_sell()
+
+    # while True:
+    #     test_get_all()
+    #     time.sleep(10)
     
     
     # test_create_new_bot()

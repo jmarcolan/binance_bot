@@ -29,14 +29,17 @@ RUN  mkdir /data
 RUN  cd /home/app/
 WORKDIR /home/app/
 
-COPY --chown=developer:developer ./app/requirements.txt /home/app/requirements.txt
-RUN pip install -r /home/app/requirements.txt
+COPY ./binance_bot/requirements.txt /home/app/binance_bot/requirements.txt
+RUN pip install -r /home/app/binance_bot/requirements.txt
+# RUN pip install -e ./binance_bot/binance_bot
 VOLUME /home/app/data
 
 # COPY --chown=developer:developer ./app/ /home/app
 # RUN  mkdir /home/app/airflow
 VOLUME /home/app/
 
+COPY . /home/app/binance_bot/
+RUN pip install -e /home/app/binance_bot/
 # COPY --chown=developer:developer ./gestao_dados/ /home/ethowatcher/gestao_dados
 # COPY --chown=developer:developer ./running_jupyter_mongo.sh /home/ethowatcher/running_jupyter_mongo.sh
 
