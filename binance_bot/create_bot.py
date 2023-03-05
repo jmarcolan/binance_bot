@@ -440,15 +440,29 @@ def test_get_all(db_url="sqlite:////home/app/data/bot.db"):
     ls_bot_act = get_all_bot_activate()
     for bot_activ in ls_bot_act:
         print(bot_activ)
-        bot_id = bot_activ.bot_id
-        acc_id = bot_activ.count_id
-        bot = BotGridDolar(bot_id)
-        sinc = SincWithBinance(db_url, bot_id)
-        user, client = acc.get_account_and_client(acc_id, db_url= db_url)
-        price = bi_tra.get_current_price(client, bot.bot_info.symbol)
-        print(price)
-        bot.new_transaction(price)
-        sinc.sinc_db_binance()
+        if (bot_activ.type_bot == "BUYSELL"):
+            print("OPERATION BUYSELL")
+            bot_id = bot_activ.bot_id
+            acc_id = bot_activ.count_id
+            bot = BotGridDolarBUY(bot_id)
+            sinc = SincWithBinanceBUY(db_url, bot_id)
+            user, client = acc.get_account_and_client(acc_id, db_url= db_url)
+            price = bi_tra.get_current_price(client, bot.bot_info.symbol)
+            print(price)
+            bot.new_transaction(price)
+            sinc.sinc_db_binance()
+        
+        elif(bot_activ.type_bot == "SELLBUY"):
+            print("OPERATION SELLBUY")
+            bot_id = bot_activ.bot_id
+            acc_id = bot_activ.count_id
+            bot = BotGridDolar(bot_id)
+            sinc = SincWithBinance(db_url, bot_id)
+            user, client = acc.get_account_and_client(acc_id, db_url= db_url)
+            price = bi_tra.get_current_price(client, bot.bot_info.symbol)
+            print(price)
+            bot.new_transaction(price)
+            sinc.sinc_db_binance()
 
 def test_kepp_alive_buy_sell():
     bot = BotGridDolarBUY(1)
@@ -466,11 +480,11 @@ def test_kepp_alive_buy_sell():
 if __name__ == "__main__":
     # test_create_new_bot_buy_sell()
     # A skelleton dresed as king siting in a trone, with his hand holdin his head, in a foggy dungeon, his his green tunic.
-    test_kepp_alive_buy_sell()
-
-    # while True:
-    #     test_get_all()
-    #     time.sleep(10)
+    # test_kepp_alive_buy_sell()
+    # test_get_all()
+    while True:
+        test_get_all()
+        time.sleep(10)
     
     
     # test_create_new_bot()
