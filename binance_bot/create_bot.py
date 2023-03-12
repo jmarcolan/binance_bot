@@ -58,6 +58,20 @@ def get_list_transact_open(bot_id, value, db_url= "sqlite:////home/app/data/bot.
     session.close()
     return k_lines
 
+def get_list_buy_incomplete(bot_id, value, sell=["FILLED"], buy= ["CANCELED"], db_url= "sqlite:////home/app/data/bot.db"):
+    stmt = select(db_c.Bot_tran).where(
+        db_c.Bot_tran.bot_id == bot_id).where(
+        db_c.Bot_tran.sell_status.in_(sell)).where(
+        db_c.Bot_tran.buy_satus.in_(buy)).where(
+        db_c.Bot_tran.buy_price <= value).where(
+        db_c.Bot_tran.sell_price > value)
+    engine = sqlalchemy.create_engine(db_url)
+    db_c.Base.metadata.create_all(engine)
+    session = Session(engine)
+    k_lines = list(session.scalars(stmt))
+    session.close()
+    return k_lines
+
 
 def get_list_transact_open_buy(bot_id, value, db_url= "sqlite:////home/app/data/bot.db"):
     stmt = select(db_c.Bot_tran).where(
@@ -116,6 +130,14 @@ def get_buy_status(bot_id, status= ["WAIT", "WAIT_BUY", "NEW", "FILLED", "CANCEL
     k_lines = list(session.scalars(stmt))
     session.close()
     return k_lines
+
+def update_bot_using_object(t_wait:db_c.Bot_tran, db_url):
+    engine = sqlalchemy.create_engine(db_url)
+    db_c.Base.metadata.create_all(engine)
+    session = Session(engine)
+    session.add(t_wait)
+    session.commit()
+
 
 def upate_bot_transact(t_wait:db_c.Bot_tran, db_url):
     def update_db(dic_upd): 
@@ -181,6 +203,7 @@ class BotGridDolar:
     
     def _check_if_has_transaction(self, bot_id, value_pair):
         ls_tra = get_list_transact_open(bot_id, value_pair, db_url=self.db_url)
+        
         print(ls_tra)
         return len(ls_tra) > 0
 
@@ -195,6 +218,20 @@ class BotGridDolar:
                    "buy_qnt"   : str(quantity)}
         create_new_trans(dic_bot, self.db_url)
 
+    def _check_incomplete(self, bot_id, value_pair):
+        ls_tra = get_list_buy_incomplete(bot_id, value_pair, sell=["FILLED"], buy= ["CANCELED"], db_url=self.db_url)
+         ## reopen the operation
+        # ls_tra[0] buy_satus : "WAIT"
+        # upate_bot_transact(t_wait, self.db_url)
+        for t_tra in ls_tra:
+        # t_tra = ls_tra[0]
+            # reviving 
+            t_tra.buy_satus = "WAIT"
+            update_bot_using_object(t_tra, self.db_url)
+        # print(ls_tra)
+        return len(ls_tra) > 0
+
+
     def new_transaction(self, value_pair):
         cur_step = list(filter( lambda x: x[0] <= value_pair and x[1] > value_pair, self.pair_step))
         r_out = len(cur_step) ==0 
@@ -203,6 +240,12 @@ class BotGridDolar:
             return False
         print("the current step", cur_step[0])
         cur_step = cur_step[0]
+        
+        t_transaction_incomplete= self._check_incomplete(self.bot_id, value_pair)
+        if t_transaction_incomplete:
+           
+            return True
+
         t_transactio_open = self._check_if_has_transaction(self.bot_id, value_pair)
         print(t_transactio_open)
         if t_transactio_open:
@@ -220,7 +263,18 @@ class BotGridDolarBUY(BotGridDolar):
         ls_tra = get_list_transact_open_buy(bot_id, value_pair, db_url=self.db_url)
         print(ls_tra)
         return len(ls_tra) > 0
-    
+    def _check_incomplete(self, bot_id, value_pair):
+        ls_tra = get_list_buy_incomplete(bot_id, value_pair, sell = ["CANCELED"], buy= ["FILLED"], db_url=self.db_url)
+         ## reopen the operation
+        # ls_tra[0] buy_satus : "WAIT"sell=["FILLED"], buy= ["CANCELED"]
+        # upate_bot_transact(t_wait, self.db_url)
+        for t_tra in ls_tra:
+        # t_tra = ls_tra[0]
+            # reviving 
+            t_tra.sell_status = "WAIT"
+            update_bot_using_object(t_tra, self.db_url)
+        # print(ls_tra)
+        return len(ls_tra) > 0
     def _creat_new_transaction(self, top_price, bot_price,  bot_id,  symbol, quantity):
         # isso é interessente para a operação de dolar gerar 
         # euros, mas as orderm são muito pequenas para praticar ainda
