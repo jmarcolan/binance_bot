@@ -452,6 +452,8 @@ def test_update():
 
 
 def test_create_new_bot():
+    # this bot first sell and second sell
+    # so sell eur to busd an after  buy busd
     dic_bot = {"symbol"      : "EURBUSD",
         "status": "ACTIVATED",
         "delta_price" : "0.004",
@@ -532,6 +534,7 @@ def test_kepp_alive_buy_sell():
 
 
 if __name__ == "__main__":
+    # test_create_new_bot()
     # test_create_new_bot_buy_sell()
     # A skelleton dresed as king siting in a trone, with his hand holdin his head, in a foggy dungeon, his his green tunic.
     # test_kepp_alive_buy_sell()

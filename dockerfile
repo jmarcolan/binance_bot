@@ -1,6 +1,7 @@
 # FROM mongo:4.4
 # FROM ubuntu
-FROM apache/airflow:2.5.1
+FROM continuumio/miniconda3
+# FROM apache/airflow:2.5.1
 # FROM apache/airflow:latest
 # USER root
 # RUN apt-get update &&\
@@ -20,23 +21,23 @@ FROM apache/airflow:2.5.1
 # ENV PATH=$CONDA_DIR/bin:$PATH
 # RUN cd $CONDA_DIR/bin && conda init 
 # RUN pip install pymc3
-USER airflow
+# USER airflow
 RUN pip install notebook
 # RUN pip install scikit-learn
 # RUN pip install apache-airflow
 # VOLUME mongo_data/ /data/db/
 
-USER root
+# USER root
 RUN  mkdir /home/app/
 RUN  mkdir /data
 RUN  cd /home/app/
 # WORKDIR /home/app/
 
 COPY ./binance_bot/requirements.txt /home/app/binance_bot/requirements.txt
-USER airflow
+# USER airflow
 RUN pip install -r /home/app/binance_bot/requirements.txt
 # RUN pip install -e ./binance_bot/binance_bot
-USER root
+# USER root
 # VOLUME /home/app/data
 
 # COPY --chown=developer:developer ./app/ /home/app
@@ -44,8 +45,10 @@ USER root
 # VOLUME /home/app/
 
 COPY . /home/app/binance_bot/
-USER airflow
-RUN pip install -e /home/app/binance_bot/
+RUN python -m pip install -e /home/app/binance_bot/
+# USER airflow
+# RUN python -m pip install --upgrade pip
+
 # COPY --chown=developer:developer ./gestao_dados/ /home/ethowatcher/gestao_dados
 # COPY --chown=developer:developer ./running_jupyter_mongo.sh /home/ethowatcher/running_jupyter_mongo.sh
 

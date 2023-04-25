@@ -25,3 +25,7 @@ python3 -m pip install --upgrade build
 python3 -m build
 
 python /home/app/binance_bot/test/test_1.py
+
+
+
+docker run -p 9999:8888 -p 27017:27017 -p 2222:8080 --volume=/mnt/c/bots/data/:/home/app/data/ --volume=/mnt/c/bots/binance_bot/:/home/app/binance_bot/ bot bash
