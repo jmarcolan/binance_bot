@@ -535,6 +535,7 @@ def test_kepp_alive_buy_sell():
 
 if __name__ == "__main__":
     # test_create_new_bot()
+    
     # test_create_new_bot_buy_sell()
     # A skelleton dresed as king siting in a trone, with his hand holdin his head, in a foggy dungeon, his his green tunic.
     # test_kepp_alive_buy_sell()

@@ -108,6 +108,7 @@ def test_1():
     
     pair = "EURBUSD"
     time_step = "5m"
+    first_date = "01/01/23"
     engine = sqlalchemy.create_engine("sqlite:////home/app/data/demo1.db")
     k_lines, first_k_line, last_k_line = get_historical_k_line(pair, time_step)
     # print(first_k_line, last_k_line )
@@ -174,7 +175,7 @@ def test_3():
     """
     pair = "EURBUSD"
     time_step = "5m"
-    db_str = "sqlite:////home/app/data/price_data_binance.db"
+    db_str = "sqlite://sqlite:////home/app/data/demo1.db" # //home/app/data/price_data_binance.db"
     get_data_until_now(pair, time_step, db_str)
 
 def test_4():
@@ -182,14 +183,19 @@ def test_4():
     pair = "EURBUSD"
     time_step = "5m"
     db_str = "sqlite:////home/app/data/price_data_binance.db"
-    save_to_db(pair, time_step, "01/02/20", db_str)
+    save_to_db(pair, time_step, "01/02/23", db_str)
     get_data_until_now(pair, time_step, db_str)
 
 
 
 if __name__ == "__main__":
+    # to start db
     # test_1()
 
+    # to keep gathering data
+    # test_3()
+    test_4()
+
     # test_2()
-    test_3()
+    # test_3()
     # test_4()

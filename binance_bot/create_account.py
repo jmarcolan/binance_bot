@@ -61,8 +61,8 @@ def get_qnt_coin_user_and_save(client, count_id, symbol, db_url= "sqlite:////hom
 
 def test_1():
     key_binance = {
-        "api_key": "DOX8Lv3b5tAB17Gmo1z5q62pSV66iXOIYm4qgJLgW42OkIvZphKthyxgZ2DDZAqG",
-        "api_secret": "yK2dQIkRDVrMnN5LtFjVbdsJHoHzu1LIuLrusIQ0YQ5EzlLCYyj6sQPOEFRHNwrA"
+        "api_key": "KDy5NfXf3Qfu8arKbluB7WoLFHqe5CT02D91LURPthunZApRMks4yC5XShgLs3A3",
+        "api_secret": "1JHZxijq6SqeeKDlgMgPsf3Rn0Il3SW9jZiIGGADT83FnqSO91LCzsVqrHDPyXtT"
     }
     create_user = {
         # "count_id"    Column(Integer(), auto_increment=True, primary_key=True)
